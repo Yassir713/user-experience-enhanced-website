@@ -55,30 +55,36 @@ app.get('/nieuws', async function (request, response) {
   response.render('nieuws.liquid', {
 
     nieuws: newsResponseJSON.data,
-    huidigPad: request.path,
-    zoeken: search
+    huidigPad: request.path
   })
 })
 
 app.get('/nieuws/:slug', async function (request, response) {
-    // const artikel = tempDummyNews.data.find(item => item.slug === nieuwSlug)
-    // deze code hieronder haalt data uit database op
-    const res = await fetch('https://fdnd-agency.directus.app/items/frankendael_news/?filter[slug]=' + request.params.slug);
-    const result = await res.json();
-// console.log(result.data[0].id)
-    const commentParams = new URLSearchParams({
-      'filter[news]': result.data[0].id,
-      'sort' : '-date_created'  
-    })
+  let newsParams = {
+    'filter[slug]': request.params.slug
+  }
+  const newsResponse = await fetch('https://fdnd-agency.directus.app/items/frankendael_news?' + new URLSearchParams(newsParams))
+  const newsResponseJSON = await newsResponse.json()
+  const artikel = newsResponseJSON.data[0]
 
-    const commentResponse = await fetch(`${baseURL}frankendael_news_comments?${commentParams}`)
-    const commentResponseJSON = await commentResponse.json()
-    response.render('artikel.liquid', {
-      news: result.data,
-      newsId: result.data.id,
-      comments: commentResponseJSON.data
-    });
-  })
+  let messageParams = {
+    'filter[news]': artikel.id,
+    'filter[name][_nnull]': 'true',
+
+    'sort': '-date_created'
+  }
+  const messagesResponse = await fetch('https://fdnd-agency.directus.app/items/frankendael_news_comments?' + new URLSearchParams(messageParams))
+  const messagesResponseJSON = await messagesResponse.json()
+  
+  response.render('artikel.liquid', 
+    { artikel: artikel,
+      huidigPad: request.path,
+      berichten: messagesResponseJSON.data,
+      error: request.query.mislukt,
+      gelukt: request.query.gelukt
+     })
+})
+
 
 /*
 // Zie https://expressjs.com/en/5x/api.html#app.get.method over app.get()
