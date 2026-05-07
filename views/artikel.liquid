@@ -16,7 +16,7 @@
   </main>
  -->
 
- <main class="main-news-detail">
+ <main class="news-info">
     <picture>
         <source loading="lazy" type="image/avif" srcset="https://fdnd-agency.directus.app/assets/{{artikel.image}}?format=avif">
         <source loading="lazy" type="image/webp" srcset="https://fdnd-agency.directus.app/assets/{{artikel.image}}?format=webp">
@@ -29,8 +29,88 @@
     <p>
         {{ artikel.body }}
     </p>
+    
+    <form 
+    action="/nieuws/{{ artikel.slug }}" 
+    method="POST" 
+    class="comment-form{% if error %} error{% endif %}{% if gelukt %} succes{% endif %}" 
+    id="reacties">
+    <h2>Laat een bericht achter</h2>
+    <label>Naam:<input type="text" name="name" required></label>
+    <label>Bericht:<textarea name="message" id="" required></textarea></label>
+    <input type="hidden" name="newsID" value="{{ artikel.id }}">
+    <button type="submit">
+        verstuur
+    </button>
+    </form>
 
+    <ul class="opmerkingen-lijstje">
+    {% for bericht in berichten %}
+        <li>
+            <p> {{ bericht.name | truncate: 20 }}</p>
+            <time datetime="{{ bericht.date_created }}"> {{ bericht.date_created | date: '%d/%m/%Y'}} </time>
+            <p> {{ bericht.comment }} </p>
 
+        </li>
+        {% else %}
+            <li>Er zijn nog geen opmerkingen.</li>
+    {% endfor %}
+</ul>
 
+<script type="module"> 
+
+  const commForm = document.querySelector("form")
+  const formButton = document.querySelector("form button")
+  const messages = document.querySelector("ul")
+
+  // Als er op de submit button wordt geklikt ...
+  commForm.addEventListener("submit", async function(event) {
+    // Voorkom de standaard submit van de browser
+    // Let op: hiermee overschrijven we de default Loading state van de browser...
+    event.preventDefault()
+    
+    //Loading state tonen:
+    formButton.classList.add("loading")
+    formButton.innerHTML = '<span class="l-1">V</span><span class="l-2">e</span><span class="l-3">r</span><span class="l-4">s</span><span class="l-5">t</span><span class="l-6">u</span><span class="l-7">r</span><span class="l-8">e</span><span class="l-9">n</span><span class="l-10">.</span><span class="l-11">.</span><span class="l-12">.</span>'
+    //formdata voorbereiden:
+    let formData = new FormData(commForm);    
+
+    // Data fetchen:
+    // Doe een fetch naar de server, net als hoe de browser dit normaal zou doen
+    // Gebruik daarvoor het action en method attribuut van het formulier
+    // Stuur de formulierelementen mee
+    const response = await fetch(commForm.action, {
+      method: commForm.method, //POST dus
+      body: new URLSearchParams(formData) // <<< Dit moet omdat server.js anders niet met de formulier data kan werken
+    })
+
+    // Data verwerken:
+    // De server geeft data terug als het posten goed gaat
+    const responseData = await response.text()
+
+    // Normaal zou de browser die HTML parsen en weergeven, maar daar moeten we nu zelf iets mee
+    // Parse de nieuwe HTML en maak hiervan een nieuw Document Object Model in het geheugen
+    const parser = new DOMParser()
+    const responseDOM = parser.parseFromString(responseData, 'text/html')
+
+    // Zoek in die nieuwe HTML DOM onze nieuwe UI state op, die we via Liquid hebben klaargemaakt
+    const newState = responseDOM.querySelector('ul')
+
+    // data van de server toevoegen aan de DOM, aan de scorelijst in de ol
+    // Overschrijf de HTML met de nieuwe HTML
+    messages.innerHTML = newState.innerHTML
+
+      const latestMess = document.querySelector("ul li:first-of-type")
+
+    // Loading state weghalen
+    // Nu kan je waarschijnlijk de Loading state vervangen door een Success state
+    console.log("Loading state weghalen")
+    formButton.classList.remove("loading")
+    formButton.textContent = "✓"
+    latestMess.classList.add("highlight")
+
+  })
+
+</script>
 
 {% render 'partials/foot.liquid' %}

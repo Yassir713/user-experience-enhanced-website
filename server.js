@@ -85,6 +85,31 @@ app.get('/nieuws/:slug', async function (request, response) {
      })
 })
 
+app.post('/nieuws/:slug', async function (request, response){
+  const fetchCommentResponse = await fetch('https://fdnd-agency.directus.app/items/frankendael_news_comments', {
+
+    method: 'POST',
+
+    body: JSON.stringify({  
+      news: request.body.newsID, //de data van de POST van de form opgevangen door express.
+      comment: request.body.message,
+      name: request.body.name
+    }),
+
+    headers: {
+      'Content-Type': 'application/json;charset=UTF-8'
+    }
+  })
+
+  if (fetchCommentResponse.ok){ //check of het 'ok' is of niet.
+    response.redirect(303, '/nieuws/' + request.params.slug + '?gelukt#reacties')
+  }
+  else{
+    response.redirect(303, '/nieuws/' + request.params.slug + '?mislukt#reacties')
+  }
+  
+  response.redirect(303, '/nieuws/' + request.params.slug + '#reacties')
+})
 
 /*
 // Zie https://expressjs.com/en/5x/api.html#app.get.method over app.get()
