@@ -1,0 +1,22 @@
+{% render 'partials/head.liquid' %}
+
+  <!-- Top bar -->
+  <section class="topbar">
+    <a href="/" class="terug">← Terug</a>
+    <h1 class="titel">Veld nieuws</h1>
+  </section>
+
+  <main>
+    <article>
+      <img src="https://fdnd-agency.directus.app/assets/{{ news.image }}" alt="{{ news.title }}">
+      <p class="date">Geplaatst: {{ news.date }}</p> 
+      <h2>{{ news.title }}</h2>
+      <p>{{ news.body }}</p>  
+    </article>
+  </main>
+
+
+
+
+
+{% render 'partials/foot.liquid' %}
